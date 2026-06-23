@@ -272,8 +272,8 @@
 <!-- ── Blog config: edit these ── -->
 <script>
   const BLOG = {
-    name: "무정한 인간 은 니랑 나",
-    description: "In my moojunghan life with my moojunghan in my moojunghan brain-"
+    name: "My Blog",
+    description: "A place to write things down."
   };
 </script>
 
@@ -326,11 +326,19 @@
   });
 
   // ── Load post list ──
+  // Store any hash that arrived before posts loaded, resolve after.
+  let pendingSlug = null;
+
   fetch('posts/index.json')
     .then(r => r.json())
     .then(posts => {
       allPosts = posts;
-      renderPosts();
+      if (pendingSlug) {
+        loadPost(pendingSlug);
+        pendingSlug = null;
+      } else {
+        renderPosts();
+      }
     })
     .catch(() => {
       document.getElementById('posts-container').innerHTML =
@@ -345,7 +353,11 @@
     const hash = location.hash;
     if (hash.startsWith('#post/')) {
       const slug = hash.slice(6);
-      loadPost(slug);
+      if (allPosts.length === 0) {
+        pendingSlug = slug; // defer until index.json resolves
+      } else {
+        loadPost(slug);
+      }
     } else {
       showBlog();
     }
@@ -387,7 +399,22 @@
 
   function formatDate(dateStr) {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    // If the string includes a time component (has 'T' or ':'), show date + time in visitor's local timezone.
+    // Plain date strings like "2026-06-22" are shown as date-only to avoid off-by-one from UTC parsing.
+    const hasTime = dateStr.includes('T') || (dateStr.includes(' ') && dateStr.includes(':'));
+    if (hasTime) {
+      return d.toLocaleString(navigator.language || 'ko-KR', {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+        timeZoneName: 'short'
+      });
+    }
+    // Date-only: parse as local noon to avoid timezone boundary flipping the day
+    const [y, mo, dy] = dateStr.split('-').map(Number);
+    const local = new Date(y, mo - 1, dy, 12);
+    return local.toLocaleDateString(navigator.language || 'ko-KR', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
   }
 
   function cardHTML(post) {
@@ -471,15 +498,19 @@
         document.getElementById('post-view').style.display = 'block';
         window.scrollTo(0, 0);
       })
-      .catch(() => {
-        showBlog();
+      .catch(err => {
+        console.error('Failed to load post:', err);
+        document.getElementById('post-content').innerHTML =
+          '<p style="color:var(--text-muted)">Could not load post.</p>';
       });
   }
 
   function showBlog() {
     document.getElementById('blog-view').style.display = 'block';
     document.getElementById('post-view').style.display = 'none';
-    if (location.hash.startsWith('#post/')) {
+    if (location.hash.startsWith('#post/')) {git add index.html
+git commit -m "fix: post navigation race condition"
+git push
       history.pushState('', document.title, location.pathname);
     }
   }
