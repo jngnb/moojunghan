@@ -508,9 +508,7 @@
   function showBlog() {
     document.getElementById('blog-view').style.display = 'block';
     document.getElementById('post-view').style.display = 'none';
-    if (location.hash.startsWith('#post/')) {git add index.html
-git commit -m "fix: post navigation race condition"
-git push
+    if (location.hash.startsWith('#post/')) {
       history.pushState('', document.title, location.pathname);
     }
   }
