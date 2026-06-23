@@ -1,0 +1,20 @@
+[
+  {
+    "slug": "hello-world",
+    "title": "Hello World",
+    "date": "2026-06-22",
+    "cover": "assets/images/hello.jpg"
+  },
+  {
+    "slug": "seoul-thoughts",
+    "title": "서울에서의 생각들",
+    "date": "2026-06-15",
+    "cover": "assets/images/seoul.jpg"
+  },
+  {
+    "slug": "on-writing",
+    "title": "On Writing Things Down",
+    "date": "2026-05-10",
+    "cover": "assets/images/writing.jpg"
+  }
+]

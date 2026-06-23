@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Blog</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f8f6;
+      --surface: #ffffff;
+      --border: #e5e5e0;
+      --text: #1a1a1a;
+      --text-muted: #888;
+      --accent: #4a6fa5;
+      --radius: 6px;
+    }
+
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 48px 24px 32px;
+      max-width: 900px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin-top: 6px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .controls label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    select {
+      font-size: 0.85rem;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      appearance: none;
+      padding-right: 24px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+
+    .view-toggle {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+
+    .view-btn {
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .view-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── Main ── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+    }
+
+    /* ── Card Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .card-cover {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+      background: var(--border);
+    }
+
+    .card-cover.placeholder {
+      background: linear-gradient(135deg, #e8e8e4 0%, #d8d8d2 100%);
+    }
+
+    .card-body {
+      padding: 16px;
+    }
+
+    .card-date {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+
+    .card-snippet {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ── List View ── */
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      transition: color 0.1s;
+    }
+
+    .list-item:hover .list-title {
+      color: var(--accent);
+    }
+
+    .list-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      min-width: 90px;
+    }
+
+    .list-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    /* ── Post view ── */
+    #post-view {
+      display: none;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      margin-bottom: 32px;
+      transition: color 0.15s;
+    }
+
+    .back-btn:hover { color: var(--text); }
+
+    .post-cover {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      display: block;
+      margin-bottom: 32px;
+    }
+
+    .post-meta {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .post-content h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 20px; }
+    .post-content h2 { font-size: 1.3rem; font-weight: 600; margin: 32px 0 12px; }
+    .post-content h3 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 10px; }
+    .post-content p { margin-bottom: 16px; font-size: 1rem; line-height: 1.75; }
+    .post-content img { max-width: 100%; border-radius: var(--radius); margin: 8px 0; }
+    .post-content pre { background: #f0f0ec; border-radius: var(--radius); padding: 16px; overflow-x: auto; margin-bottom: 16px; }
+    .post-content code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.88em; }
+    .post-content p code { background: #f0f0ec; padding: 2px 6px; border-radius: 3px; }
+    .post-content blockquote { border-left: 3px solid var(--border); padding-left: 16px; color: var(--text-muted); margin-bottom: 16px; }
+    .post-content ul, .post-content ol { margin-bottom: 16px; padding-left: 24px; }
+    .post-content li { margin-bottom: 6px; line-height: 1.65; }
+    .post-content a { color: var(--accent); }
+    .post-content hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+    /* ── Loading / empty ── */
+    .loading {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 32px 0;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 32px 16px 24px; }
+      .controls { padding: 16px; }
+      main { padding: 0 16px 48px; }
+      .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Blog config: edit these ── -->
+<script>
+  const BLOG = {
+    name: "무정한 인간 은 니랑 나",
+    description: "In my moojunghan life with my moojunghan in my moojunghan brain-"
+  };
+</script>
+
+<div id="blog-view">
+  <header>
+    <h1 id="blog-name"></h1>
+    <p id="blog-desc"></p>
+  </header>
+
+  <div class="controls">
+    <label for="sort-select">정렬</label>
+    <select id="sort-select">
+      <option value="newest">최신순</option>
+      <option value="oldest">오래된순</option>
+      <option value="alpha">가나다순 (A–Z)</option>
+    </select>
+
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-grid" onclick="setView('grid')">▦ Cards</button>
+      <button class="view-btn" id="btn-list" onclick="setView('list')">☰ List</button>
+    </div>
+  </div>
+
+  <main id="posts-container">
+    <p class="loading">Loading posts…</p>
+  </main>
+</div>
+
+<div id="post-view" style="max-width:720px; margin:0 auto; padding: 40px 24px 80px;">
+  <button class="back-btn" onclick="showBlog()">← Back</button>
+  <div class="post-meta" id="post-meta"></div>
+  <img class="post-cover" id="post-cover" style="display:none" />
+  <div class="post-content" id="post-content"></div>
+</div>
+
+<script>
+  // ── State ──
+  let allPosts = [];
+  let currentView = 'grid';
+  let currentSort = 'newest';
+
+  // ── Init ──
+  document.getElementById('blog-name').textContent = BLOG.name;
+  document.title = BLOG.name;
+  document.getElementById('blog-desc').textContent = BLOG.description;
+
+  document.getElementById('sort-select').addEventListener('change', e => {
+    currentSort = e.target.value;
+    renderPosts();
+  });
+
+  // ── Load post list ──
+  fetch('posts/index.json')
+    .then(r => r.json())
+    .then(posts => {
+      allPosts = posts;
+      renderPosts();
+    })
+    .catch(() => {
+      document.getElementById('posts-container').innerHTML =
+        '<p class="loading">No posts found. Add entries to posts/index.json.</p>';
+    });
+
+  // ── Routing: hash-based ──
+  window.addEventListener('hashchange', handleHash);
+  window.addEventListener('load', handleHash);
+
+  function handleHash() {
+    const hash = location.hash;
+    if (hash.startsWith('#post/')) {
+      const slug = hash.slice(6);
+      loadPost(slug);
+    } else {
+      showBlog();
+    }
+  }
+
+  // ── View toggle ──
+  function setView(v) {
+    currentView = v;
+    document.getElementById('btn-grid').classList.toggle('active', v === 'grid');
+    document.getElementById('btn-list').classList.toggle('active', v === 'list');
+    renderPosts();
+  }
+
+  // ── Sort ──
+  function sortedPosts() {
+    const arr = [...allPosts];
+    if (currentSort === 'newest') return arr.sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (currentSort === 'oldest') return arr.sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (currentSort === 'alpha') return arr.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+    return arr;
+  }
+
+  // ── Render ──
+  function renderPosts() {
+    const container = document.getElementById('posts-container');
+    const posts = sortedPosts();
+
+    if (posts.length === 0) {
+      container.innerHTML = '<p class="loading">No posts yet.</p>';
+      return;
+    }
+
+    if (currentView === 'grid') {
+      container.innerHTML = `<div class="grid">${posts.map(cardHTML).join('')}</div>`;
+    } else {
+      container.innerHTML = `<div class="list">${posts.map(listItemHTML).join('')}</div>`;
+    }
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function cardHTML(post) {
+    const cover = post.cover
+      ? `<img class="card-cover" src="${post.cover}" alt="" loading="lazy" onerror="this.classList.add('placeholder'); this.removeAttribute('src')">`
+      : `<div class="card-cover placeholder"></div>`;
+
+    return `
+      <a class="card" href="#post/${post.slug}">
+        ${cover}
+        <div class="card-body">
+          <div class="card-date">${formatDate(post.date)}</div>
+          <div class="card-title">${post.title}</div>
+          <div class="card-snippet" id="snippet-${post.slug}">…</div>
+        </div>
+      </a>`;
+  }
+
+  function listItemHTML(post) {
+    return `
+      <a class="list-item" href="#post/${post.slug}">
+        <span class="list-date">${formatDate(post.date)}</span>
+        <span class="list-title">${post.title}</span>
+      </a>`;
+  }
+
+  // Lazily load snippets after rendering cards
+  function loadSnippets(posts) {
+    posts.forEach(post => {
+      const el = document.getElementById(`snippet-${post.slug}`);
+      if (!el) return;
+      fetch(`posts/${post.slug}.md`)
+        .then(r => r.text())
+        .then(md => {
+          const plain = md
+            .replace(/^---[\s\S]*?---/, '')       // strip frontmatter
+            .replace(/^#+\s.*/gm, '')             // strip headings
+            .replace(/!\[.*?\]\(.*?\)/g, '')      // strip images
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links → text
+            .replace(/[*_`#>-]/g, '')             // strip markdown symbols
+            .replace(/\s+/g, ' ').trim();
+          el.textContent = plain.slice(0, 140) + (plain.length > 140 ? '…' : '');
+        })
+        .catch(() => { el.textContent = ''; });
+    });
+  }
+
+  // Patch renderPosts to also load snippets for grid view
+  const _renderPosts = renderPosts;
+  renderPosts = function() {
+    _renderPosts();
+    if (currentView === 'grid') {
+      setTimeout(() => loadSnippets(sortedPosts()), 0);
+    }
+  };
+
+  // ── Single post ──
+  function loadPost(slug) {
+    const meta = allPosts.find(p => p.slug === slug);
+    fetch(`posts/${slug}.md`)
+      .then(r => { if (!r.ok) throw new Error('not found'); return r.text(); })
+      .then(md => {
+        // Strip frontmatter
+        const body = md.replace(/^---[\s\S]*?---\n?/, '');
+
+        document.getElementById('post-content').innerHTML = marked.parse(body);
+
+        const coverEl = document.getElementById('post-cover');
+        if (meta && meta.cover) {
+          coverEl.src = meta.cover;
+          coverEl.style.display = 'block';
+          coverEl.onerror = () => { coverEl.style.display = 'none'; };
+        } else {
+          coverEl.style.display = 'none';
+        }
+
+        document.getElementById('post-meta').textContent =
+          meta ? formatDate(meta.date) : '';
+
+        document.getElementById('blog-view').style.display = 'none';
+        document.getElementById('post-view').style.display = 'block';
+        window.scrollTo(0, 0);
+      })
+      .catch(() => {
+        showBlog();
+      });
+  }
+
+  function showBlog() {
+    document.getElementById('blog-view').style.display = 'block';
+    document.getElementById('post-view').style.display = 'none';
+    if (location.hash.startsWith('#post/')) {
+      history.pushState('', document.title, location.pathname);
+    }
+  }
+</script>
+</body>
+</html>
